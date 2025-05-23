@@ -1,25 +1,89 @@
-Códigos empleados en el Trabajo Fin de Grado de Jorge Galán para la ETSIT UPM, cuyo objetivo es el de la predicción de impagos en proyectos de electrificación rural de la Fundación Acciona.
+# Predicción de impagos en proyectos de electrificación rural
 
-En primer lugar, está clientes_y_ventas.py. Este código carga tres archivos CSV que contienen información sobre ventas, servicios y clientes. Tras verificar que los archivos existen, extrae las columnas clave, las renombra y realiza uniones entre las tablas para relacionar cada venta con su servicio correspondiente y, a su vez, con el cliente asociado. Finalmente, reorganiza las columnas resultantes (client_id, utility_id, sale_id) y guarda esta información consolidada en un nuevo archivo CSV llamado client_util_sale.csv
-Después, se creo el módulo clientes_y_ventas_ordenado.py, que lo que hace es ordenar el CSV generado con el módulo anterior y ordenarlo  por cliente para que todas las ventas de cada cliente aparezcan de forma consecutiva.
+Códigos empleados en el Trabajo Fin de Grado de **Jorge Galán** para la **ETSIT UPM**, cuyo objetivo es la predicción de impagos en proyectos de electrificación rural de la Fundación Acciona.
 
-Los módulos rates, quantity, nonPaymentPeriod, con_comunidad_y_país y amount añaden al CSV anterior las propiedades de ese mismo nombre al CSV. Toda esat funcionalidad se recoge en csv_completo.py, que hace simultáneamente todas las funcionalidades explicadas anteriormente.
+---
 
-Después, está el modulo filtro.py, que elimina todas aquellas ventas que tengan alguna de las variables independientes anteriormente mencionadas con valor NULL. El módulo definitivo.py realiza todas las funcionalidades explicadas hasta el momento, incluida este ultimo filtrado y además ordena las ventas de cada cliente por orden cronológico, de la más antigua a la más reciente.
-Los algoritmos que evalúan las métricas, el reporte de clasificación y la matriz de confusión de los clientes para Bosques Aleatorios son bA_GLOBAL.py y bA_CLIENTES.py para hacerlo a nivel global y a nivel de cliente, lo que sirvió para descartar este algoritmo para nuestro caso de estudio.
+### 🔧 Preparación de datos
 
-Por último, el módulo división_por_paises.py tiene como principal misión cargar como entrada el CSV que contiene todos los datos de todos los clientes y dividirlo en 5 datasets diferentes en función del identificador de países, para poder llevar a cabo estudios más específicos por país.
+- [`clientes_y_ventas.py`](./clientes_y_ventas.py): Carga CSVs de clientes, servicios y ventas, los une y guarda el archivo consolidado `client_util_sale.csv`.
+- [`clientes_y_ventas_ordenado.py`](./clientes_y_ventas_ordenado.py): Ordena el CSV anterior agrupando las ventas por cliente.
 
-Los siguientes scripts forman parte de un sistema completo para entrenar, evaluar y analizar modelos LSTM orientados a predecir el estado de pago de clientes (como "CORRECTO", "PENDIENTE_DE_PAGO" e "IMPAGO") a partir de datos de ventas y consumo. El flujo comienza con el entrenamiento y predicción mediante modelos LSTM como los de LSTM.py, LSTM_POR_PESOS.py y lstm_distribución_manual_de_pesos.py, que siguen una estructura similar: cargan datos de clientes, normalizan los valores de entrada, los dividen en entrenamiento y validación, y entrenan un modelo LSTM con PyTorch. Las diferencias radican en el tratamiento de las clases desbalanceadas: uno usa pesos por defecto, otro calcula pesos inversamente proporcionales a la frecuencia de las clases, y otro los asigna manualmente para enfatizar la detección de impagos. Se hizo una primera aproximación usando todos los clientes para tener una primera idea de qué método podría llegar a funcionar mejor, y se apreció que pesos inversos y pesos manuales tenían resultados similares.
+- Módulos que añaden variables:
+  - [`rates.py`](./rates.py)
+  - [`quantity.py`](./quantity.py)
+  - [`nonPaymentPeriod.py`](./nonPaymentPeriod.py)
+  - [`con_comunidad_y_país.py`](./con_comunidad_y_pa%C3%ADs.py)
+  - [`amount.py`](./amount.py)
+  - Todos estos están integrados en [`csv_completo.py`](./csv_completo.py), que ejecuta todas estas tareas a la vez.
 
-Después, el módulo definitivo_con_estado_clientes.py calcula el estado de las ventas de un cliente y los almacena en el CSV bajo el nombre de state. Por su parte, state_and_days.py añade los días reales transcurridos entre ventas y venta de un cliente. Por último, esto se complementa con paymentPeriod.py, que añade a este último CSV esta variable que marca el periodo de pago de un ciliente según su tarifa.
+- Limpieza y ordenación avanzada:
+  - [`filtro.py`](./filtro.py): Elimina ventas con valores `NULL` en variables clave.
+  - [`definitivo.py`](./definitivo.py): Realiza todas las tareas anteriores, más ordenamiento cronológico de ventas.
 
-Posteriormente, una vez se había comprobado que para esta caso de estudio el mejor de los escenarios planteados en el párrafo anterior era usar una distribución de pesos inversis a la frecuencia, se plantearon 4 escenarios en los que se trabajaría con los datos de Perú al ser los más desbalanceados: priorizar la Validation Loss usasndo pesos inversos y manuales, y priorizar el Recall de la clase Impago volviendo a usar las dos distintas distribuciones de pesos. Esta funcionalidad la dan los módulos predict_autoregresive.py, predict_autoregresive_pesos_manuales, prioritize_recall_pesos_inversos y prioritize_recall_pesos_manueales respectivamente. Los 4 módulos usan LSTM para entrenar el modelo y predecir el estado de las ventas, devolviendo el reporte de clasifificación de cada uno de los escenarios.
+---
 
-Los módulos beam_search.py y partial_teacher_forcing.py utilizan una LSTM con pesos inversos a la frecuencia para entrenar y evaluar el modelo aplicando las respectivas técnicas que dan nombre al módulo y cuyas explicaciones de los algoritmos se encuentran en el PDF del TFG. Por otro lado, está pesos_manuales_scheduled_sampling.py, que hace lo mismo que los anteriores pero aplicando la técnica de scheduled_sampling, que resultó tener mayor eficiencia usando pesos manuales que inversos, pero que en ningún moemto dio mejor rendimiento que los dos anteriores. Estos módulos seguían enfocados en la predicción del futuro estado de las ventas.
+### 🌲 Algoritmos de Bosques Aleatorios
 
-El módulo zero_rule.py utiliza el algoritmo Zero Rule para dar una primera aproximación sobre los resultados esperados en el escenario. Para ello, lo que hace es predecir siempre la media de días transcurridos entre las ventas de un cliente, y desde esa comparaación sacar los valores de error relativo y de error absoluto de sus predicciones. Con el error relativo se construirán los consiguientes histogramas.
+- [`bA_GLOBAL.py`](./bA_GLOBAL.py): Entrenamiento y evaluación global.
+- [`bA_CLIENTES.py`](./bA_CLIENTES.py): Evaluación a nivel cliente.
 
-Por último, tenemos los módulos ERRORES_RELATIVOS_CLIENTES.py y ERRORES_RELATIVOS_CLIENTES_COMMUNITY.py, que en a,bos casos calculan los errores relativos como se describen en el documento del TFG con el que luego se verán los histogramas de la parte de resultados, pero con una diferencia. El segundo usa community_id como variable categórica para estudiar la influencia geográfica en los datos y en el comportamiento de los clientes, mientras que el primero no lo tiene en cuenta. 
+---
 
-Cabe destacar que a todos los códigos que entrenan al modelo, predicen y evalúan son susceptinbles de trabajar con archivos en los que aparezcan los datos de todos los clientes, de los clientes divididos por países, y con fechas filtradas a Proteo V3 o sin filtrar. Lo que cambia es el archivo de salida generado que el usuario puede nombrar como más cómodo le sea. Además, los códigos referentes a la preparación del dataset son aptos de manejarse en el orden preferido del usuario, es posible dividir por países en cualquier momento y añadir variables al CSV como prefiera el usuario.
+### 🌎 División geográfica
+
+- [`división_por_paises.py`](./divisi%C3%B3n_por_paises.py): Divide los datos en 5 datasets según el país.
+
+---
+
+### 🔁 Modelos LSTM
+
+Entrenan y evalúan modelos LSTM para predecir el estado de pago de ventas:
+
+- [`LSTM.py`](./LSTM.py)
+- [`LSTM_POR_PESOS.py`](./LSTM_POR_PESOS.py)
+- [`lstm_distribución_manual_de_pesos.py`](./lstm_distribuci%C3%B3n_manual_de_pesos.py)
+
+---
+
+### 🧠 Cálculo del estado de pago
+
+- [`definitivo_con_estado_clientes.py`](./definitivo_con_estado_clientes.py): Calcula el estado ("CORRECTO", "IMPAGO"...).
+- [`state_and_days.py`](./state_and_days.py): Añade días entre ventas.
+- [`paymentPeriod.py`](./paymentPeriod.py): Añade la variable de periodo de pago.
+
+---
+
+### 📊 Escenarios de entrenamiento y evaluación (caso Perú)
+
+- [`predict_autoregresive.py`](./predict_autoregresive.py)
+- [`predict_autoregresive_pesos_manuales.py`](./predict_autoregresive_pesos_manuales.py)
+- [`prioritize_recall_pesos_inversos.py`](./prioritize_recall_pesos_inversos.py)
+- [`prioritize_recall_pesos_manueales.py`](./prioritize_recall_pesos_manueales.py)
+
+---
+
+### ⚙️ Técnicas avanzadas
+
+- [`beam_search.py`](./beam_search.py)
+- [`partial_teacher_forcing.py`](./partial_teacher_forcing.py)
+- [`pesos_manuales_scheduled_sampling.py`](./pesos_manuales_scheduled_sampling.py)
+
+---
+
+### 🧮 Reglas y errores
+
+- [`zero_rule.py`](./zero_rule.py): Algoritmo Zero Rule para benchmarking.
+- [`ERRORES_RELATIVOS_CLIENTES.py`](./ERRORES_RELATIVOS_CLIENTES.py)
+- [`ERRORES_RELATIVOS_CLIENTES_COMMUNITY.py`](./ERRORES_RELATIVOS_CLIENTES_COMMUNITY.py)
+
+---
+
+### ℹ️ Notas
+
+- Todos los códigos que entrenan modelos pueden trabajar con datasets completos, divididos por país o filtrados.
+- La preparación de datos es modular: se pueden añadir variables o dividir por países en cualquier momento según necesidad del usuario.
+
+---
+
+💡 Para más detalles, consulta el documento del TFG asociado.
