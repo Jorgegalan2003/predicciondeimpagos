@@ -16,6 +16,4 @@ Posteriormente, una vez se había comprobado que para esta caso de estudio el me
 
 Los módulos beam_search.py y partial_teacher_forcing.py utilizan una LSTM con pesos inversos a la frecuencia para entrenar y evaluar el modelo aplicando las respectivas técnicas que dan nombre al módulo y cuyas explicaciones de los algoritmos se encuentran en el PDF del TFG. Por otro lado, está pesos_manuales_scheduled_sampling.py, que hace lo mismo que los anteriores pero aplicando la técnica de scheduled_sampling, que resultó tener mayor eficiencia usando pesos manuales que inversos, pero que en ningún moemto dio mejor rendimiento que los dos anteriores. Estos módulos seguían enfocados en la predicción del futuro estado de las ventas.
 
-Ahora, procederemos a explicar los códigos relacionados con el segundo de los casos de estudio: la estimación de los días que tardará el cliente en volver a pagar.
-
- 
+El módulo zero_rule.py utiliza el algoritmo Zero Rule para dar una primera aproximación sobre los resultados esperados en el escenario. Para ello, lo que hace es predecir siempre la media de días transcurridos entre las ventas de un cliente, y desde esa comparaación sacar los valores de error relativo y de error absoluto de sus predicciones. Con el error relativo se construirán los consiguientes histogramas.
