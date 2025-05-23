@@ -7,4 +7,4 @@ Los módulos rates, quantity, nonPaymentPeriod, con_comunidad_y_país y amount a
 
 Después, está el modulo filtro.py, que elimina todas aquellas ventas que tengan alguna de las variables independientes anteriormente mencionadas con valor NULL. El módulo definitivo.py realiza todas las funcionalidades explicadas hasta el momento, incluida este ultimo filtrado.
 
-
+Por su parte, el módulo DATOS_REALES.py extrae de la base de datos los estados reales de las ventas pertenecientes al conjunto de ventas de validación, ya sea a nivel global o en el estudio por cliente, para luego poder evaluar el modelo, sus métricas y precisión.
