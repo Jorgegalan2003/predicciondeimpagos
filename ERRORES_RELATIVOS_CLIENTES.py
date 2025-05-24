@@ -118,7 +118,7 @@ with torch.no_grad():
 
         errors = torch.abs(preds - y_days.cpu())
         rate_periods = test_df["rate_payment_period"].values.astype(float)
-        denominators = rate_periods * 3
+        denominators = rate_periods * 30
         relative_errors = errors / torch.tensor(denominators, dtype=torch.float)
 
         total_preds += len(relative_errors)
