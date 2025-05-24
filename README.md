@@ -93,4 +93,6 @@ Todos entrenan y predicen con LSTM, generando reportes de clasificación para co
 
 ---
 
+### Histogramas
+- El módulo [`histogramas.m`](./histogramas.m) grafica los histogramas en Matlab. Resulta esencial destacar que el valor del error relativo lo multiplica por 100 para así poder trabajar en porcentajes. 
 💡 Para más información técnica y fundamentos, consulta el documento completo del TFG.
